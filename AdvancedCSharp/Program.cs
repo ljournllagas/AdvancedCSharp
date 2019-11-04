@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace AdvancedCSharp
 {
@@ -6,9 +7,32 @@ namespace AdvancedCSharp
     {
         static void Main(string[] args)
         {
-            
+          
         }
 
+        static void UseLambdas()
+        {
+            const int factor = 5;
+
+            Func<int, int> multiplier = n => n * factor;
+
+            Func<string> hello = () => "Hello World";
+
+            Console.WriteLine(multiplier(5));
+            Console.WriteLine(hello.Invoke());
+
+            var books = new BookRepository().GetBooks();
+
+            var cheapBooks = books.FindAll(b => b.Price < 10);
+
+            //without lambdas
+            //var cheapBooks2 = books.FindAll(IsCheaperThan10Dollars);
+
+            foreach (var book in cheapBooks)
+            {
+                Console.WriteLine(book.Title);
+            }
+        }
         static void UseDelegate()
         {
             var processor = new PhotoProcessor();
@@ -31,18 +55,43 @@ namespace AdvancedCSharp
         }
     }
 
+    #region "Using Lambdas"
+
+    //static bool IsCheaperThan10Dollars(BookLambdas book)
+    //{
+    //    return book.Price < 10;
+    //}
+
+    public class BookRepository
+    {
+        public List<BookLambdas> GetBooks()
+        {
+            return new List<BookLambdas>
+            {
+                new BookLambdas() {Title = "Title 1", Price = 5},
+                new BookLambdas() {Title = "Title 2", Price = 7},
+                new BookLambdas() {Title = "Title 3", Price = 17}
+            };
+        }
+    }
+    public class BookLambdas
+    {
+        public string Title { get; set; }
+        public int Price { get; set; }
+    }
+
+    #endregion
+
+
+    #region "Using Delegates"
     public class AdditionalFilters
     {
         public static void RemoveRedEyeFilter(Photo photo)
         {
             Console.WriteLine("Apply remove redeye");
         }
-
-
     }
 
-    #region "Using Delegates"
-  
     public class PhotoFilters
     {
         public void ApplyBrightness(Photo photo)
