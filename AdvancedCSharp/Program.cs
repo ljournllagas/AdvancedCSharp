@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading;
 
 namespace AdvancedCSharp
 {
@@ -7,9 +8,21 @@ namespace AdvancedCSharp
     {
         static void Main(string[] args)
         {
-          
+           
         }
 
+        static void UseEvents()
+        {
+            var video = new Video() { Title = "Video 1" };
+            var videoEncoder = new VideoEncoder(); //publisher
+            var mailService = new MailService(); //subscriber
+            var messageService = new SmsService(); //subscriber
+
+            videoEncoder.VideoEncoded += mailService.OnVideoEncoded;
+            videoEncoder.VideoEncoded += messageService.OnVideoEncoded;
+
+            videoEncoder.Encode(video);
+        }
         static void UseLambdas()
         {
             const int factor = 5;
@@ -55,6 +68,65 @@ namespace AdvancedCSharp
         }
     }
 
+    #region "Using Events"
+    public class Video
+    {
+        public string Title { get; set; }
+    }
+
+    public class VideoEventArgs : EventArgs
+    {
+        public Video Video { get; set; }
+    }
+
+    public class VideoEncoder
+    {
+        //1 - define a delegate
+        //2 - define an event based on the defined delegate
+        //3 - raise the event
+
+        //1 optional
+        //public delegate void VideoEncodedEventHandler(object source, VideoEventArgs args);
+
+        //2
+        public event EventHandler<VideoEventArgs> VideoEncoded;
+
+        //default param
+        //object source, eventargs e
+        //public event EventHandler VideoEncoding;
+
+        //3
+        protected virtual void OnVideoEncoded(Video video)
+        {
+            VideoEncoded?.Invoke(this, new VideoEventArgs() { Video = video });
+        }
+
+        public void Encode(Video video)
+        {
+            Console.WriteLine("Encoding video..");
+            Thread.Sleep(3000);
+
+            OnVideoEncoded(video);
+        }
+
+    }
+
+    public class MailService
+    {
+        public void OnVideoEncoded(object source, VideoEventArgs e)
+        {
+            Console.WriteLine("MailService: Sending an email for >>> " + e.Video.Title);
+        }
+    }
+
+    public class SmsService
+    {
+        public void OnVideoEncoded(object source, VideoEventArgs e)
+        {
+            Console.WriteLine("SmsService: Sending a text message for >>> " + e.Video.Title);
+        }
+    }
+    #endregion
     #region "Using Lambdas"
 
     //static bool IsCheaperThan10Dollars(BookLambdas book)
@@ -81,8 +153,6 @@ namespace AdvancedCSharp
     }
 
     #endregion
-
-
     #region "Using Delegates"
     public class AdditionalFilters
     {
@@ -135,7 +205,6 @@ namespace AdvancedCSharp
     }
 
     #endregion
-
     #region "Using Generics"
 
     // where T : struct
@@ -230,5 +299,4 @@ namespace AdvancedCSharp
         }
     }
     #endregion
-
 }
