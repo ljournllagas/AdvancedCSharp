@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using System.Threading;
 
 namespace AdvancedCSharp
@@ -8,18 +10,119 @@ namespace AdvancedCSharp
     {
         static void Main(string[] args)
         {
-           
+
+         
+
         }
 
+        static void HandleExceptions()
+        {
+
+            try
+            {
+                var youtubeApi = new YoutubeApi();
+                youtubeApi.GetVideos("ljourn");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+
+            try
+            {
+                using (var streamReader = new StreamReader(@"c:\file.zip"))
+                {
+                    var content = streamReader.ReadToEnd();
+                    Console.WriteLine(content);
+                }
+
+            }
+            catch (Exception)
+            {
+                Console.WriteLine("Sorry, an unexpected error occured");
+            }
+
+            try
+            {
+                var calculator = new Calculator();
+                var result = calculator.Divide(5, 0);
+            }
+            catch (DivideByZeroException ex)
+            {
+                Console.WriteLine("You cannot divide by zero");
+            }
+            catch (ArithmeticException ex)
+            {
+                Console.WriteLine("Invalid arithmetic method");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Sorry, an unexpected error occured");
+            }
+        }
+        static void UseDynamic()
+        {
+            dynamic a = 5;
+            dynamic b = 1;
+            var c = a + b; //will be dynamic
+
+            int i = 5;
+            dynamic d = i;
+            long l = d;
+        }
+        static void UseNullableType()
+        {
+            DateTime? date = new DateTime(2017, 2, 3);
+            DateTime date2 = date ?? DateTime.Now;
+
+            Console.WriteLine(date2);
+
+            Console.WriteLine("GetValueOrDefault" + date.GetValueOrDefault());
+            Console.WriteLine("HasValue" + date.HasValue);
+        }
+        static void UseLinq()
+        {
+            var books = new BookRepositoryLinq().GetBooks();
+
+            //LINQ query operators
+            var cheaperBooks = from b in books
+                               where b.Price < 10
+                               orderby b.Title
+                               select b.Title;
+
+            //LINQ extension methods
+            var cheapBooks = books
+                        .Where(b => b.Price < 10)
+                        .OrderBy(b => b.Title)
+                        .Select(b => b.Title);
+
+            foreach (var book in cheapBooks)
+            {
+                Console.WriteLine(book);
+            }
+
+            var bookSingle = books.SingleOrDefault(b => b.Title == "Title 7");
+
+            Console.WriteLine(bookSingle?.Title);
+        }
+        static void UseExtensionMethods()
+        {
+            string post = "This is supposed to be very long blog post blah blah blah..";
+            var shortedPost = post.Shorten(5);
+
+            Console.WriteLine(shortedPost);
+        }
         static void UseEvents()
         {
             var video = new Video() { Title = "Video 1" };
             var videoEncoder = new VideoEncoder(); //publisher
             var mailService = new MailService(); //subscriber
             var messageService = new SmsService(); //subscriber
+            var sftp = new SFTPService();  //subscriber
 
             videoEncoder.VideoEncoded += mailService.OnVideoEncoded;
             videoEncoder.VideoEncoded += messageService.OnVideoEncoded;
+            videoEncoder.VideoEncoded += sftp.OnVideoEncoded;
 
             videoEncoder.Encode(video);
         }
@@ -68,6 +171,85 @@ namespace AdvancedCSharp
         }
     }
 
+    #region "Using Exception Handling"
+    public class Calculator
+    {
+        public int Divide(int numerator, int denomenator)
+        {
+            return numerator / denomenator;
+        }
+    }
+
+    public class YoutubeApi
+    {
+        public List<Video> GetVideos(string user)
+        {
+            try
+            {
+                // access youtube web service
+                // read the data
+                // create a list of video objects
+                throw new Exception("Oops some low level exception");
+            }
+            catch (Exception ex)
+            {
+                throw new YoutubeException("Could not fetch the videos from Youtube.", ex);
+            }
+
+            return new List<Video>();
+        }
+    }
+
+    public class YoutubeException : Exception
+    {
+        public YoutubeException(string message, Exception innerException)
+            : base(message, innerException)
+        {
+
+        }
+    }
+    #endregion
+    #region "Using Linq"
+    public class BookRepositoryLinq
+    {
+        public List<BookLinq> GetBooks()
+        {
+            return new List<BookLinq>
+            {
+                new BookLinq() {Title = "Title 1", Price = 5},
+                new BookLinq() {Title = "Title 2", Price = 7},
+                new BookLinq() {Title = "Title 3", Price = 17},
+                new BookLinq() {Title = "Title 4", Price = 9},
+                new BookLinq() {Title = "Title 5", Price = 99}
+            };
+        }
+    }
+    public class BookLinq
+    {
+        public string Title { get; set; }
+        public int Price { get; set; }
+    }
+    #endregion
+    #region "Using Extension Methods"
+    public static class StringExtensions
+    {
+        public static string Shorten(this String str, int numberOfWords)
+        {
+            if (numberOfWords < 0)
+                throw new ArgumentOutOfRangeException("numberOfWords should be greater than or equal to 0.");
+
+            if (numberOfWords == 0)
+                return "";
+
+            var words = str.Split(' ');
+
+            if (words.Length <= numberOfWords)
+                return str;
+
+            return string.Join(" ", words.Take(numberOfWords));
+        }
+    }
+    #endregion
     #region "Using Events"
     public class Video
     {
@@ -104,7 +286,7 @@ namespace AdvancedCSharp
         public void Encode(Video video)
         {
             Console.WriteLine("Encoding video..");
-            Thread.Sleep(3000);
+            //Thread.Sleep(3000);
 
             OnVideoEncoded(video);
         }
@@ -126,6 +308,19 @@ namespace AdvancedCSharp
             Console.WriteLine("SmsService: Sending a text message for >>> " + e.Video.Title);
         }
     }
+
+
+    public class SFTPService
+    {
+        public void OnVideoEncoded(object source, VideoEventArgs e)
+        {
+            Console.WriteLine("SFTP: Sending a SFTP for >>> " + e.Video.Title);
+        }
+    }
+
+
+
+
     #endregion
     #region "Using Lambdas"
 
