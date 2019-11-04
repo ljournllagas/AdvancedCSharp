@@ -2,7 +2,9 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace AdvancedCSharp
 {
@@ -10,8 +12,6 @@ namespace AdvancedCSharp
     {
         static void Main(string[] args)
         {
-
-         
 
         }
 
@@ -171,6 +171,50 @@ namespace AdvancedCSharp
         }
     }
 
+    #region "Using Asynchronous Programming"
+    public class AsyncDemo
+    {
+
+        public async Task<string> GetHtmlAsync(string url)
+        {
+            var webClient = new WebClient();
+
+            return await webClient.DownloadStringTaskAsync(url);
+        }
+
+        //not async
+        public string GetHtml(string url)
+        {
+            var webClient = new WebClient();
+
+            return  webClient.DownloadString(url);
+        }
+
+        public async Task DownloadHtmlAsync(string url)
+        {
+            var webClient = new WebClient();
+            var html = await webClient.DownloadStringTaskAsync(url);
+
+            using (var streamWriter = new StreamWriter(@"C:\result.html"))
+            {
+               await streamWriter.WriteAsync(html);
+
+            }
+        }
+
+        //not async
+        public void DownloadHtml(string url)
+        {
+            var webClient = new WebClient();
+            var html = webClient.DownloadString(url);
+
+            using (var streamWriter = new StreamWriter(@"D:\\result.html"))
+            {
+                streamWriter.Write(html);
+            }
+        }
+    }
+    #endregion
     #region "Using Exception Handling"
     public class Calculator
     {
