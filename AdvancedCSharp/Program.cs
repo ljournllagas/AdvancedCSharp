@@ -6,14 +6,43 @@ namespace AdvancedCSharp
     {
         static void Main(string[] args)
         {
-            var number = new Nullable<int>();
-            Console.WriteLine("Has value: " + number.HasValue);
+            
+        }
+
+        static void UseDelegate()
+        {
+            var processor = new PhotoProcessor();
+            var filters = new PhotoFilters();
+            Action<Photo> filterHandler = filters.ApplyBrightness;
+            filterHandler += filters.ApplyContrast;
+            filterHandler += AdditionalFilters.RemoveRedEyeFilter;
+            processor.Process("photo.jpg", filterHandler);
+        }
+        static void UseGenerics()
+        {
+            var number = new Nullable<int>(5);
+            Console.WriteLine("Has Value " + number.HasValue);
             Console.WriteLine("Value: " + number.GetValueOrDefault());
+
+            //null date
+            var nullDate = new Nullable<DateTime>();
+            Console.WriteLine("Has Value " + nullDate.HasValue);
+            Console.WriteLine("Value: " + nullDate.GetValueOrDefault());
         }
     }
 
+    public class AdditionalFilters
+    {
+        public static void RemoveRedEyeFilter(Photo photo)
+        {
+            Console.WriteLine("Apply remove redeye");
+        }
+
+
+    }
 
     #region "Using Delegates"
+  
     public class PhotoFilters
     {
         public void ApplyBrightness(Photo photo)
@@ -34,14 +63,10 @@ namespace AdvancedCSharp
 
     public class PhotoProcessor
     {
-        public void Process(string path)
+        public void Process(string path, Action<Photo> filterHandler)
         {
             var photo = Photo.Load(path);
-
-            var filters = new PhotoFilters();
-            filters.ApplyBrightness(photo);
-            filters.ApplyContrast(photo);
-            filters.Resize(photo);
+            filterHandler(photo);
 
             photo.Save();
         }
@@ -145,7 +170,6 @@ namespace AdvancedCSharp
     public class GenericList<T>
     {
         
-
         public void Add(T value)
         {
 
